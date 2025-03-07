@@ -19,7 +19,7 @@ public class Interfaz extends JFrame {
         carril_1.setBounds(0,0,700,100);
         carril_1.setBackground(Color.GRAY);
         carril_1.setEditable(false);
-        carril_1.
+        
         add(carril_1);
         
         
