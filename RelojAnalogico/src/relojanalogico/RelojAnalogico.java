@@ -1,6 +1,7 @@
 package relojanalogico;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.util.Calendar;
@@ -22,6 +23,10 @@ public class RelojAnalogico extends JFrame implements Runnable{
     int manecillasSegundos = 100;
     int manecillasMinutos = 70;
     int manecillasHora = 50;
+    
+    int sizeClock = 220;
+    
+    String kirby[][] = PixelArt.kirby;
     
     public RelojAnalogico(){
         setTitle("Reloj");
@@ -46,10 +51,26 @@ public class RelojAnalogico extends JFrame implements Runnable{
             
             Graphics gFondo = fondo.getGraphics();
             gFondo.setClip(0, 0, getWidth(), getHeight());
-            ImageIcon fondito = new ImageIcon("");
-            
-            gFondo.drawImage(fondito.getImage(), (getWidth()-300)/2,(getHeight()-300)/2, 300, 300, this);
-            
+            gFondo.setFont(new Font("arial", Font.BOLD, 20));
+            gFondo.setColor(new Color(Integer.parseInt("dddddd", 16)));
+            gFondo.fillRect(0, 0, getWidth(), getHeight());
+            for (int i = 0; i < kirby.length; i++) {
+                for (int j = 0; j < kirby[i].length; j++) {
+                    gFondo.setColor(new Color(Integer.parseInt(kirby[i][j], 16)));
+                    gFondo.fillRect(i*5, j*5+250, 5, 5);
+                }
+            }
+            gFondo.setColor(Color.BLACK);
+            gFondo.drawOval((getWidth()/2)-(sizeClock/2), (getHeight()/2)-(sizeClock/2), sizeClock, sizeClock);
+            gFondo.setColor(Color.WHITE);
+            gFondo.fillOval((getWidth()/2)-(sizeClock/2)+1, (getHeight()/2)-(sizeClock/2)+1, sizeClock-2, sizeClock-2);
+            gFondo.setColor(Color.BLACK);
+            for (int i = 1; i < 13; i++) {
+                int angulo = obtenerAnguloHora(i);
+                double x = getX(angulo, sizeClock/2-10);
+                double y = getY(angulo, sizeClock/2-10);
+                gFondo.drawString(String.valueOf(i), getWidth()/2+(int)x-7, getHeight()/2+(int)y+10);
+            }
         }
         
         update(g);
@@ -58,33 +79,61 @@ public class RelojAnalogico extends JFrame implements Runnable{
     
     public void update(Graphics g){
         double xHora, yHora, anguloHora;
+        double xMin, yMin, anguloMin;
+        double xSec, ySec, anguloSec;
         
         g.setClip(0, 0, getWidth(), getHeight());
         
         Calendar cal = Calendar.getInstance();
+        buffer = createImage(getWidth(), getHeight());
+        Graphics gbuffer = buffer.getGraphics();
+        gbuffer.setClip(0, 0, getWidth(), getHeight());
+        gbuffer.drawImage(fondo, 0, 0, this);
         
-        if(cal.get(Calendar.MINUTE) != min){
+        if(cal.get(Calendar.HOUR) != -1){
             hora = cal.get(Calendar.HOUR);
             
-            
-            buffer = createImage(getWidth(), getHeight());
-            Graphics gbuffer = buffer.getGraphics();
-            gbuffer.setClip(0, 0, getWidth(), getHeight());
-            gbuffer.drawImage(fondo, 0, 0, this);
-            
-            
             System.out.println(hora);
-            anguloHora = angulo12(hora);
+            anguloHora = obtenerAnguloHora(hora);
             
             System.out.println("Angulo Hora: " + anguloHora);
             xHora = getX(anguloHora, manecillasHora);
             yHora = getY(anguloHora, manecillasHora);
             
-            gbuffer.setColor(Color.WHITE);
+            gbuffer.setColor(Color.BLACK);
             gbuffer.drawLine(getWidth()/2, getHeight()/2, (getHeight()/2)+(int) xHora, (getHeight()/2)+(int) yHora);
             
             g.drawImage(buffer, 0, 0, this);
+        }
+        if(cal.get(Calendar.MINUTE) != -1){
+            min = cal.get(Calendar.MINUTE);
             
+            System.out.println(min);
+            anguloMin = obtenerAnguloMinutosSegundos(min);
+            
+            System.out.println("Angulo minutos: "+anguloMin);
+            xMin = getX(anguloMin, manecillasMinutos);
+            yMin = getY(anguloMin, manecillasMinutos);
+            
+            gbuffer.setColor(Color.BLACK);
+            gbuffer.drawLine(getWidth()/2, getHeight()/2, (getHeight()/2)+(int) xMin, (getHeight()/2)+(int) yMin);
+            
+            g.drawImage(buffer, 0, 0, this);
+        }
+        if(cal.get(Calendar.SECOND) != -1){
+            sec = cal.get(Calendar.SECOND);
+            
+            System.out.println(sec);
+            anguloSec = obtenerAnguloMinutosSegundos(sec);
+            
+            System.out.println("Angulo segundos: " + anguloSec);
+            xSec = getX(anguloSec, manecillasSegundos);
+            ySec = getY(anguloSec, manecillasSegundos);
+            
+            gbuffer.setColor(Color.BLACK);
+            gbuffer.drawLine(getWidth()/2, getHeight()/2, (getHeight()/2)+(int) xSec, (getHeight()/2)+(int) ySec);
+            
+            g.drawImage(buffer, 0, 0, this);
         }
     }
 
@@ -97,6 +146,16 @@ public class RelojAnalogico extends JFrame implements Runnable{
             } catch (Exception e) {
             }
         }
+    }
+    
+    private int obtenerAnguloHora(int hora){
+        int resultado = -((360/12)*hora + 180);
+        return resultado;
+    }
+    
+    private int obtenerAnguloMinutosSegundos(int min){
+        int angulo = -((360/60)*min + 180);
+        return angulo;
     }
     
     
