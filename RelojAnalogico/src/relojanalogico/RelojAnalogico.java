@@ -26,7 +26,7 @@ public class RelojAnalogico extends JFrame implements Runnable{
     
     int sizeClock = 220;
     
-    String kirby[][] = PixelArt.kirby;
+    PixelArt pixel;
     
     public RelojAnalogico(){
         setTitle("Reloj");
@@ -49,17 +49,15 @@ public class RelojAnalogico extends JFrame implements Runnable{
         if(fondo == null){
             fondo = createImage(getWidth(), getHeight());
             
+            pixel = new PixelArt();
+            
             Graphics gFondo = fondo.getGraphics();
             gFondo.setClip(0, 0, getWidth(), getHeight());
             gFondo.setFont(new Font("arial", Font.BOLD, 20));
             gFondo.setColor(new Color(Integer.parseInt("dddddd", 16)));
             gFondo.fillRect(0, 0, getWidth(), getHeight());
-            for (int i = 0; i < kirby.length; i++) {
-                for (int j = 0; j < kirby[i].length; j++) {
-                    gFondo.setColor(new Color(Integer.parseInt(kirby[i][j], 16)));
-                    gFondo.fillRect(i*5, j*5+250, 5, 5);
-                }
-            }
+            pixel.pintarKirby(gFondo, 0, 250, 5);
+            pixel.pintarKirby(gFondo, 300, 250, 5);
             gFondo.setColor(Color.BLACK);
             gFondo.drawOval((getWidth()/2)-(sizeClock/2), (getHeight()/2)-(sizeClock/2), sizeClock, sizeClock);
             gFondo.setColor(Color.WHITE);

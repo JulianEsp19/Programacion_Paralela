@@ -1,7 +1,10 @@
 package relojanalogico;
 
+import java.awt.Color;
+import java.awt.Graphics;
+
 public class PixelArt {
-    public static String kirby[][] = {
+    private String kirby[][] = {
  {"dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd"},
 {"dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd"},
 {"dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd"},
@@ -41,5 +44,14 @@ public class PixelArt {
 {"dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd", "dddddd"},
 
 };
+    
+    public void pintarKirby(Graphics gFondo, int x, int y, int tamano){
+        for (int i = 0; i < kirby.length; i++) {
+                for (int j = 0; j < kirby[i].length; j++) {
+                    gFondo.setColor(new Color(Integer.parseInt(kirby[i][j], 16)));
+                    gFondo.fillRect(i*tamano+x, j*tamano+y, tamano, tamano);
+                }
+            }
+    }
     
 }
