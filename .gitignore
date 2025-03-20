@@ -25,4 +25,11 @@ hs_err_pid*
 replay_pid*
 /Puente/dist/
 /SantaClaus/nbproject/private/
+<<<<<<< Updated upstream
 /SantaClaus/build/
+=======
+/SantaClaus/dist/
+/SantaClaus/build/
+/SantaClausInterfaz/nbproject/private/
+/SantaClausInterfaz/build/
+>>>>>>> Stashed changes
