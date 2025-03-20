@@ -19,23 +19,7 @@
 *.tar.gz
 *.rar
 *.properties
-private.xml
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
-paralelaPractica1/nbproject/private/private.properties
-/CarreraAnimlesInterfaz/nbproject/private/
-/CarreraAnimlesInterfaz/build/
-/CarreraAnimlesInterfaz/dist/
-/RelojAnalogico/nbproject/private/
-/RelojAnalogico/build/
-/RelojAnalogico/dist/
-/relojAnalogico1/nbproject/private/
-/relojAnalogico1/build/
-/carreraAnimales/nbproject/private/
-/carreraAnimales/build/
-/Puente/nbproject/private/
-/Puente/build/
-/SantaClaus/nbproject/private/
-/Canivales/nbproject/private/
