@@ -1,7 +1,12 @@
 package santaclausinterfaz;
 
 import java.awt.Color;
+import java.awt.Image;
 import static java.lang.Thread.sleep;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 public class Reno extends Thread{
@@ -9,7 +14,7 @@ public class Reno extends Thread{
         private int probabilidad = 20;
         private boolean regreso;
         private Main vista;
-        private JPanel reno;
+        private JLabel reno;
         private int serieReno;
         
         public Reno(SantaClaus santa, Main vista){
@@ -24,6 +29,18 @@ public class Reno extends Thread{
             while(true){
                 if(!regreso){
                     verRegreso();
+                }if(santa.getRenosRegreso() == 9){
+                    santa.llegaronLosRenos();
+                    reno.setVisible(false);
+                    
+                    try {
+                        sleep(5000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Reno.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    
+                    renoVacaciones();
+                    santa.regresamosLosRenos();
                 }
                 
                 try{
@@ -34,11 +51,20 @@ public class Reno extends Thread{
             }
         }
         
+        private void renoVacaciones(){
+            regreso = false;
+        }
+        
         private void iniciarReno(){
             serieReno = santa.iniciarReno();
-            reno = new JPanel();
+            
+            ImageIcon imagenAnimal1 = new ImageIcon("src/imagenes/reno.png");
+            Image imagen = imagenAnimal1.getImage();
+            imagen = imagen.getScaledInstance(100,100, Image.SCALE_SMOOTH);
+            imagenAnimal1 = new ImageIcon(imagen);
+            
+            reno = new JLabel(imagenAnimal1);
             reno.setBounds(100+(serieReno*110), 50, 100, 100);
-            reno.setBackground(Color.gray);
             reno.setVisible(regreso);
             vista.add(reno);
             vista.repaint();
@@ -49,6 +75,8 @@ public class Reno extends Thread{
             if(probabilidad == 1){
                 regreso = true;
                 reno.setVisible(regreso);
+                santa.regresoReno();
+                System.out.println("Reno: " + santa.getRenosRegreso());
             }
         }
 }

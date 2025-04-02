@@ -1,13 +1,15 @@
 package santaclausinterfaz;
 
 import java.awt.Color;
+import java.awt.Image;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JPanel;
+import javax.swing.JLabel;
 
 public class Main extends JFrame{
     
-    JPanel santa;
+    JLabel santa;
     
     JButton anadirDuende;
     
@@ -25,12 +27,17 @@ public class Main extends JFrame{
         anadirDuende.addActionListener((e) -> { anadirDuende(); });
         add(anadirDuende);
         
-        santa = new JPanel();
+        ImageIcon imagenAnimal1 = new ImageIcon("src/imagenes/grinch.png");
+        Image imagen = imagenAnimal1.getImage();
+        imagen = imagen.getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+        imagenAnimal1 = new ImageIcon(imagen);
+        
+        santa = new JLabel(imagenAnimal1);
         santa.setBounds(50, 200, 100, 100);
         santa.setBackground(Color.red);
         add(santa);
         
-        santaClass = new SantaClaus();
+        santaClass = new SantaClaus(santa);
         
         for (int i = 0; i < 9; i++) {
             Reno reno = new Reno(santaClass, this);

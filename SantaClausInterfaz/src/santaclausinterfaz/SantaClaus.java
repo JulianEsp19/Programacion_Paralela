@@ -3,54 +3,76 @@ package santaclausinterfaz;
 import static java.lang.Thread.sleep;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JLabel;
 
 public class SantaClaus {
 
     private int renosRegreso;
-    private boolean dormido;
+    private boolean disponibleDuendes;
     private int numDuendeProblemas;
     private int serieRenos;
     private int serieDuendes;
     private int turno;
+    private int llegada;
     
-    private boolean regresar;
+    private JLabel santa;
 
-    public SantaClaus() {
+    public SantaClaus(JLabel santa) {
+        this.santa = santa;
         renosRegreso = 0;
-        dormido = true;
+        disponibleDuendes = true;
         serieRenos = 0;
         numDuendeProblemas = 0;
         turno = 0;
-        regresar = false;
+        llegada = 0;
+    }
+    
+    public synchronized void llegaronLosRenos(){
+        disponibleDuendes = false;
+        santa.setVisible(false);
+    }
+    
+    public synchronized void regresamosLosRenos(){
+        disponibleDuendes = true;
+        renosRegreso = 0;
+        santa.setVisible(true);
+    }
+    
+    public synchronized boolean disponible(){
+        return disponibleDuendes;
+    }
+    
+    public void llegue(){
+        llegada++;
+    }
+    
+    public int llegaron(){
+        return llegada;
     }
 
     public void regresoReno() {
         renosRegreso++;
     }
     
-    public void anadirTurno(){
+    public int getRenosRegreso(){
+        return renosRegreso;
+    }
+    
+    public synchronized void anadirTurno(){
         turno++;
     }
 
-    public int getTurno() {
+    public synchronized int getTurno() {
         return turno;
     }
     
     public synchronized void ayudarDuendes(){
         numDuendeProblemas = 0;
         turno = 0;
-        regresar = true;
-        
-        try {
-            sleep(3000);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(SantaClaus.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        regresar = false;
+        llegada = 0;
     }
 
-    public void anadirDuendeProblemas() {
+    public synchronized void anadirDuendeProblemas() {
         numDuendeProblemas++;
     }
 
@@ -66,10 +88,6 @@ public class SantaClaus {
     public int iniciarDuende(){
         serieDuendes++;
         return serieDuendes;
-    }
-
-    public boolean isRegresar() {
-        return regresar;
     }
 
 }
