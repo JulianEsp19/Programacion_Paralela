@@ -1,13 +1,11 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
- */
 package mergesort1;
 
 import java.awt.BorderLayout;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -113,6 +111,9 @@ public class Main extends JFrame {
 
         executorButton = new JButton("Executor");
         executorButton.setBounds(400, 400, 100, 30);
+        executorButton.addActionListener((e) -> {
+            mergeSortExecutor();
+        });
         add(executorButton);
 
         tiempoSecuencial = new JLabel("");
@@ -142,6 +143,26 @@ public class Main extends JFrame {
     private void borrar() {
         array = null;
     }
+    
+    private void mergeSortExecutor() {
+        copia = Arrays.copyOf(array, array.length);
+        long tiempo = System.nanoTime();
+        
+        ExecutorService executor = Executors.newFixedThreadPool(1);
+
+        // Ejecutar MergeSort con Executor
+        
+        executor.submit(new Executor(copia, 0, copia.length-1));
+
+        // Esperar a que se complete
+        executor.shutdown();
+        
+        long tiempoFinal = System.nanoTime();
+        tiempoExecutor.setText(String.valueOf((tiempoFinal - tiempo) / 1_000_000.00) + "ms");
+        
+        originalLabel.setText(Arrays.toString(array));
+        acomodadoLabel.setText(Arrays.toString(copia));
+    }
 
     private void mergeSortForkJoin() {
         copia = Arrays.copyOf(array, array.length);
@@ -160,12 +181,10 @@ public class Main extends JFrame {
     private void mergeSortSecuencial() {
         copia = Arrays.copyOf(array, array.length);
         long tiempo = System.nanoTime();
-        System.out.println(tiempo);
 
         Secuencial.mergeSort(copia);
 
         long tiempoFinal = System.nanoTime();
-        System.out.println(tiempoFinal);
         tiempoSecuencial.setText(String.valueOf((tiempoFinal - tiempo) / 1_000_000.00) + "ms");
         
         originalLabel.setText(Arrays.toString(array));
