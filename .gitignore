@@ -49,3 +49,6 @@ replay_pid*
 /SocketsServidor/build/
 /SocketsMultiHilo/nbproject/private/
 /SocketsMultiHilo/build/
+/Orcado/nbproject/private/
+/Orcado/build/
+/Orcado/dist/

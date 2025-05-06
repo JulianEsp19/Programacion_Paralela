@@ -1,0 +1,119 @@
+package orcado.vistas;
+
+import herramientas.Host;
+import herramientas.ServidorMultiParlante;
+import herramientas.botones;
+import java.awt.Color;
+import java.awt.Font;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JButton;
+
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+public class HostInicio extends JPanel {
+
+    public String nombre;
+
+    private int widthVista;
+    private int heightVista;
+
+    private Host host;
+
+    private JLabel titulo,
+            hostName,
+            jugadores,
+            lista;
+    
+    private JButton iniciar;
+    
+    private JFrame vista;
+
+    private String[] usuarios = new String[4];
+    private int conexionUsuarios = 1;
+
+    public HostInicio(String nombre, JFrame vista) {
+        this.nombre = nombre;
+        usuarios[0] = nombre;
+        
+        this.vista = vista;
+
+        widthVista = vista.getWidth();
+        heightVista = vista.getHeight();
+
+        //creacion de las especificaciones de la vista
+        setBounds(0, 0, widthVista, heightVista);
+        setBackground(Color.WHITE);
+        setLayout(null);
+
+        host = new Host(this);
+        host.start();
+
+        Font fuente = new Font("Arial", Font.BOLD, 15);
+
+        try {
+            titulo = new JLabel("Datos Host: " + InetAddress.getLocalHost().getHostAddress());
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(HostInicio.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        titulo.setBounds(10, 400, 200, 50);
+        titulo.setFont(fuente);
+        add(titulo);
+
+        hostName = new JLabel("Nombre Host:" + nombre);
+        hostName.setBounds(10, 50, 200, 50);
+        hostName.setFont(fuente);
+        add(hostName);
+
+        jugadores = new JLabel("Jugadores unidos:");
+        jugadores.setBounds(700, 50, 200, 50);
+        jugadores.setFont(fuente);
+        add(jugadores);
+
+        lista = new JLabel(nombre);
+        lista.setBounds(700, 90, 200, 300);
+        lista.setForeground(Color.blue);
+        lista.setVerticalTextPosition(JLabel.TOP);
+        lista.setAlignmentY(JLabel.TOP);
+        lista.setVerticalAlignment(JLabel.TOP);
+        lista.setFont(fuente);
+        add(lista);
+        
+        iniciar = botones.iniciarBotones("INICIAR", 200 , 50);
+        iniciar.setBounds(350, 200, 200, 50);
+        iniciar.addActionListener((e) -> { iniciar(); });
+        add(iniciar);
+
+        vista.add(this);
+    }
+
+    public void unirse(String nombre, ServidorMultiParlante solicitud) {
+        if (conexionUsuarios < 4) {
+            usuarios[conexionUsuarios] = nombre;
+            lista.setText("<html>");
+            for (String usuario : usuarios) {
+                if (usuario != null) {
+                    lista.setText(lista.getText() + usuario + "<br>");
+                }
+            }
+            lista.setText(lista.getText() + "<html>");
+            host.actualizarUnion(this.nombre, usuarios);
+        }
+        conexionUsuarios++;
+    }
+    
+    public void iniciar(){
+        new Juego(vista, this, nombre, usuarios, conexionUsuarios, host);
+        
+        String mensaje = "{\"accion\":\"iniciar\","
+                + "\"jugadores\":"+ conexionUsuarios
+                + "}";
+        
+        host.enviarMensaje(mensaje);
+        this.setVisible(false);
+    }
+}
