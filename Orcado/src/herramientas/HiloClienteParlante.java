@@ -45,7 +45,7 @@ public class HiloClienteParlante extends Thread {
                 }else if(json.get("accion").getAsString().equals("actualizarPartida")){
                     if(juego != null) juego.actualizacion(json);
                 }
-                System.out.println(respuesta);
+                
                 sleep(100);
             }
         } catch (IOException ex) {

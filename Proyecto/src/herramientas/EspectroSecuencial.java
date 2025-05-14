@@ -46,7 +46,7 @@ public class EspectroSecuencial {
                 }
             }
             
-            Thread.sleep(300);
+            Thread.sleep(500);
 
             int exitCode = process.waitFor();
             if (exitCode != 0) {

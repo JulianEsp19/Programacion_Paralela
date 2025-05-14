@@ -117,7 +117,7 @@ public class Juego extends JPanel {
         Random random = new Random();
         int numeroAleatorio = random.nextInt(pool.length);
         frase = pool[numeroAleatorio];
-        System.out.println(frase);
+
     }
 
     private void actualizarFraseLabel() {
@@ -179,7 +179,14 @@ public class Juego extends JPanel {
             actualizarFraseLabel();
             verificar();
             infoJugadores[turno].correcto();
-        } else if (fotograma < 6) {
+            if (turno < jugadores - 1) {
+                turno++;
+                actualizarTurno();
+            } else {
+                turno = 0;
+                actualizarTurno();
+            }
+        } else if (fotograma < 5) {
             infoJugadores[turno].disminuir();
             if (turno < jugadores - 1) {
                 turno++;
@@ -188,10 +195,11 @@ public class Juego extends JPanel {
                 turno = 0;
                 actualizarTurno();
             }
-            fotograma++;
+            fotograma += 2;
             frames.setIcon(imagenes.obtenerImagenEscalada("src/fotograma000" + fotograma + ".png", 150, 300));
         } else {
             frames.setIcon(imagenes.obtenerImagenEscalada("src/fotograma0007.png", 150, 300));
+            fotograma = 7;
             gameOver();
         }
         boton.setEnabled(false);
@@ -235,8 +243,8 @@ public class Juego extends JPanel {
             actualizarClientes();
         }
     }
-    
-    public void actualizarPuntajes(JsonObject json){
+
+    public void actualizarPuntajes(JsonObject json) {
         JsonArray array = json.get("puntajes").getAsJsonArray();
 
         for (int i = 0; i < jugadores; i++) {
@@ -294,6 +302,11 @@ public class Juego extends JPanel {
             for (JButton boton : teclado) {
                 boton.setEnabled(false);
             }
+        }else if(fotograma == 7){
+            for (JButton boton : teclado) {
+                boton.setEnabled(false);
+            }
+            fraseLabel.setText(frase);
         }
     }
 

@@ -5,8 +5,12 @@ import herramientas.ServidorMultiParlante;
 import herramientas.botones;
 import java.awt.Color;
 import java.awt.Font;
+import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
@@ -28,9 +32,9 @@ public class HostInicio extends JPanel {
             hostName,
             jugadores,
             lista;
-    
+
     private JButton iniciar;
-    
+
     private JFrame vista;
 
     private String[] usuarios = new String[4];
@@ -39,7 +43,7 @@ public class HostInicio extends JPanel {
     public HostInicio(String nombre, JFrame vista) {
         this.nombre = nombre;
         usuarios[0] = nombre;
-        
+
         this.vista = vista;
 
         widthVista = vista.getWidth();
@@ -55,11 +59,7 @@ public class HostInicio extends JPanel {
 
         Font fuente = new Font("Arial", Font.BOLD, 15);
 
-        try {
-            titulo = new JLabel("Datos Host: " + InetAddress.getLocalHost().getHostAddress());
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(HostInicio.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        titulo = new JLabel("Datos Host: " + obtenerIPWiFi());
         titulo.setBounds(10, 400, 200, 50);
         titulo.setFont(fuente);
         add(titulo);
@@ -82,10 +82,12 @@ public class HostInicio extends JPanel {
         lista.setVerticalAlignment(JLabel.TOP);
         lista.setFont(fuente);
         add(lista);
-        
-        iniciar = botones.iniciarBotones("INICIAR", 200 , 50);
+
+        iniciar = botones.iniciarBotones("INICIAR", 200, 50);
         iniciar.setBounds(350, 200, 200, 50);
-        iniciar.addActionListener((e) -> { iniciar(); });
+        iniciar.addActionListener((e) -> {
+            iniciar();
+        });
         add(iniciar);
 
         vista.add(this);
@@ -105,15 +107,50 @@ public class HostInicio extends JPanel {
         }
         conexionUsuarios++;
     }
-    
-    public void iniciar(){
+
+    public void iniciar() {
         new Juego(vista, this, nombre, usuarios, conexionUsuarios, host);
-        
+
         String mensaje = "{\"accion\":\"iniciar\","
-                + "\"jugadores\":"+ conexionUsuarios
+                + "\"jugadores\":" + conexionUsuarios
                 + "}";
-        
+
         host.enviarMensaje(mensaje);
         this.setVisible(false);
+    }
+
+    public String obtenerIPWiFi() {
+        try {
+            // Obtenemos todas las interfaces de red
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+
+            // Iteramos por todas las interfaces disponibles
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface ni = interfaces.nextElement();
+
+                // Verificamos si el nombre de la interfaz comienza con "wlan" (para interfaces Wi-Fi)
+                if (ni.getName().startsWith("wlan")) {
+                    if (ni.isUp()) {
+                        Enumeration<InetAddress> direcciones = ni.getInetAddresses();
+
+                        // Iteramos por todas las direcciones asociadas a la interfaz
+                        while (direcciones.hasMoreElements()) {
+                            InetAddress direccion = direcciones.nextElement();
+
+                            // Filtramos solo las direcciones IPv4 y descartamos las de loopback (127.0.0.1)
+                            if (direccion instanceof Inet4Address && !direccion.isLoopbackAddress()) {
+                                return direccion.getHostAddress(); // Retornamos la IP encontrada
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            // Manejo de excepciones: imprime el error para depuración
+            e.printStackTrace();
+        }
+
+        // Si no se encuentra una IP válida, devolvemos un mensaje por defecto
+        return "IP Wi-Fi no encontrada";
     }
 }

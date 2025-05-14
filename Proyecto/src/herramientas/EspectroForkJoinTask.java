@@ -24,7 +24,7 @@ public class EspectroForkJoinTask extends RecursiveAction {
                     new EspectroExecutor(archivo.getPath()).run(); // Reaprovechamos tu Callable
                 }
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(200);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(EspectroForkJoinTask.class.getName()).log(Level.SEVERE, null, ex);
                 }

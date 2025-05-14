@@ -1,5 +1,6 @@
 package orcado;
 
+import java.util.Random;
 import javax.swing.JFrame;
 import orcado.vistas.Inicio;
 import orcado.vistas.Juego;
@@ -16,6 +17,8 @@ public class Main extends JFrame{
         setResizable(false);
         
         new Inicio(this);
+        
+        System.out.println(new Random().nextInt(4));
         
         setVisible(true);
     }
