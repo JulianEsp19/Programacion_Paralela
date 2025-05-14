@@ -19,6 +19,7 @@
 *.tar.gz
 *.rar
 !gson-2.13.1.jar
+!commons-math3-3.6.1.jar
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
@@ -52,3 +53,5 @@ replay_pid*
 /Orcado/nbproject/private/
 /Orcado/build/
 /Orcado/dist/
+/Proyecto/nbproject/private/
+/Proyecto/build/
