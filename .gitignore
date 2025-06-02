@@ -55,3 +55,8 @@ replay_pid*
 /Orcado/dist/
 /Proyecto/nbproject/private/
 /Proyecto/build/
+/Sockets/build/
+/UNO/nbproject/private/
+/UNO/build/
+/ChatRMI/nbproject/private/
+/ChatRMI/build/
