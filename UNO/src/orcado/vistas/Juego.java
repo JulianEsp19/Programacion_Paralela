@@ -210,7 +210,6 @@ public class Juego extends JPanel {
                 } else if (host.getEfecto() != 2) {
                     host.pasarTurno();
                 }
-
             }
         } else {
             if (cliente.jugarCarta(valorCarta)) {
@@ -226,6 +225,10 @@ public class Juego extends JPanel {
                     cliente.pasarTurno();
                 }
             }
+        }
+        
+        if(mano.getLength() == 1){
+            uno();
         }
     }
 
