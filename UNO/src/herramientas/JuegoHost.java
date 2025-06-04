@@ -34,13 +34,13 @@ public class JuegoHost extends UnicastRemoteObject implements JuegoImple {
     private int efecto = -1,
             afectado = -1;
 
-    private boolean sentido;
+    private boolean sentido,
+            ready,
+            victoria;
 
     private String[] jugadores = new String[4];
 
     private Registry registro;
-
-    private boolean ready;
 
     public JuegoHost(String nombreHost) throws RemoteException {
         jugadoresCount = 1;
@@ -48,6 +48,7 @@ public class JuegoHost extends UnicastRemoteObject implements JuegoImple {
         registro = LocateRegistry.createRegistry(PUERTO);
         ready = false;
         this.sentido = true;
+        victoria = false;
         try {
             registro.bind("Juego", (JuegoImple) this);
         } catch (Exception e) {
@@ -176,25 +177,41 @@ public class JuegoHost extends UnicastRemoteObject implements JuegoImple {
 
     private int getSiguiente() {
         int turno = this.turno;
-        
-        if (this.sentido) {
-            turno ++;
-            if(turno == jugadoresCount) turno = 0;
-        } else {
-            turno --;
-            if(turno == -1) turno = jugadoresCount-1;
+        if (!victoria) {
+
+            if (this.sentido) {
+                turno++;
+                if (turno == jugadoresCount) {
+                    turno = 0;
+                }
+            } else {
+                turno--;
+                if (turno == -1) {
+                    turno = jugadoresCount - 1;
+                }
+            }
         }
         return turno;
     }
     
     @Override
-    public void consumirNombre(){
-        afectado = -1;
+    public void setVictoria() {
+        victoria = true;
     }
     
     @Override
-    public int getCartaMazo(){
-        if(indiceBaraja < 60){
+    public boolean getVictoria(){
+        return victoria;
+    }
+
+    @Override
+    public void consumirNombre() {
+        afectado = -1;
+    }
+
+    @Override
+    public int getCartaMazo() {
+        if (indiceBaraja < 60) {
             indiceBaraja++;
             return cartas[indiceBaraja];
         }
@@ -234,21 +251,28 @@ public class JuegoHost extends UnicastRemoteObject implements JuegoImple {
     public void pasarTurno() {
         System.out.println("pasar turno: " + this.sentido);
         System.out.println("efecto: " + this.efecto);
-        if (this.sentido) {
-            turno ++;
-            if(turno == jugadoresCount) turno = 0;
+        
+        if(!victoria){
+            if (this.sentido) {
+                turno++;
+                if (turno == jugadoresCount) {
+                    turno = 0;
+                }
 
-            if (efecto == 0 || efecto == 4 || efecto == 2) {
-                efectoConsumido();
-                turno = getSiguiente();
-            }
-        } else {
-            turno --;
-            if(turno == -1) turno = jugadoresCount-1;
+                if (efecto == 0 || efecto == 4 || efecto == 2) {
+                    efectoConsumido();
+                    turno = getSiguiente();
+                }
+            } else {
+                turno--;
+                if (turno == -1) {
+                    turno = jugadoresCount - 1;
+                }
 
-            if (efecto == 0 || efecto == 4 || efecto == 2) {
-                efectoConsumido();
-                turno = getSiguiente();
+                if (efecto == 0 || efecto == 4 || efecto == 2) {
+                    efectoConsumido();
+                    turno = getSiguiente();
+                }
             }
         }
     }

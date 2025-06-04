@@ -19,6 +19,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 import mano.Mano;
 
 public class Juego extends JPanel {
@@ -48,6 +49,8 @@ public class Juego extends JPanel {
     private JuegoImple cliente;
 
     private boolean isCambioColor = false;
+    
+    private boolean unoClick = false;
 
     public Juego(JFrame vista, String nombre, JuegoHost host) {
         this.vista = vista;
@@ -140,6 +143,15 @@ public class Juego extends JPanel {
                         for (int i = 0; i < 2; i++) {
                             obtenerCarta();
                         }
+                        if (isHost) {
+                            host.pasarTurno();
+                        } else {
+                            try {
+                                cliente.pasarTurno();
+                            } catch (RemoteException ex) {
+                                Logger.getLogger(Juego.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
                     } else if (efecto == 4) {
                         for (int i = 0; i < 4; i++) {
                             obtenerCarta();
@@ -149,7 +161,12 @@ public class Juego extends JPanel {
                 }
 
                 centro.setIcon(imagenes.obtenerImagenEscalada("src/cartas" + auxCentro + ".jpg", 70, 105));
-                turnoLabel.setText("Turno: " + getNombreTurno());
+
+                if (!getVictoria()) {
+                    turnoLabel.setText("Turno: " + getNombreTurno());
+                } else {
+                    turnoLabel.setText("Victoria: " + getNombreTurno());
+                }
                 repaint();
             }
         }).start();
@@ -183,28 +200,68 @@ public class Juego extends JPanel {
             System.out.println("juego: " + host.jugarCarta(valorCarta));
             if (host.jugarCarta(valorCarta)) {
                 mano.eliminarCarta(aux);
-                if (valorCarta > 51) {
+                if (mano.getLength() == 0) {
+                    setVictoria();
+                } else if (valorCarta > 51) {
                     isCambioColor = true;
                     for (JLabel color : colores) {
                         color.setVisible(true);
                     }
-                } else {
+                } else if (host.getEfecto() != 2) {
                     host.pasarTurno();
                 }
+
             }
         } else {
             if (cliente.jugarCarta(valorCarta)) {
                 mano.eliminarCarta(aux);
-                if (valorCarta > 51) {
+                if (mano.getLength() == 0) {
+                    setVictoria();
+                } else if (valorCarta > 51) {
                     isCambioColor = true;
                     for (JLabel color : colores) {
                         color.setVisible(true);
                     }
-                } else {
+                } else if (cliente.getEfecto() != 2) {
                     cliente.pasarTurno();
                 }
             }
         }
+    }
+
+    private void uno() {
+        vista.setVisible(false);
+
+        JFrame uno = new JFrame("uno");
+        uno.setSize(100, 100);
+        uno.setLayout(null);
+        uno.setResizable(false);
+        uno.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                unoClick = true;
+                System.out.println(unoClick);
+            }
+        });
+        Random random = new Random();
+        uno.setBounds(random.nextInt(1700), random.nextInt(800), 100, 100);
+        uno.setVisible(true);
+        
+        new Thread(() -> {
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Juego.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            uno.setVisible(false);
+            vista.setVisible(true);
+            if(!unoClick){
+                for (int i = 0; i < 2; i++) {
+                    obtenerCarta();
+                }
+            }
+                unoClick = false;
+        }).start();
     }
 
     private void iniciarVista() {
@@ -287,6 +344,8 @@ public class Juego extends JPanel {
 
         vista.add(this);
         actualizar();
+        
+        uno();
     }
 
     private void clickCambioColor(MouseEvent e) throws RemoteException {
@@ -312,10 +371,10 @@ public class Juego extends JPanel {
             color.setVisible(false);
         }
     }
-    
-    private void ocultarColores(int color){
+
+    private void ocultarColores(int color) {
         for (int i = 0; i < 4; i++) {
-            if(color != i){
+            if (color != i) {
                 colores[i].setVisible(false);
             }
         }
@@ -342,6 +401,31 @@ public class Juego extends JPanel {
             }
         } catch (Exception e) {
         }
+    }
+
+    private void setVictoria() {
+        try {
+            if (isHost) {
+                host.setVictoria();
+            } else {
+                cliente.setVictoria();
+            }
+        } catch (Exception e) {
+        }
+
+        turnoLabel.setText("victoria: " + nombre);
+    }
+
+    private boolean getVictoria() {
+        try {
+            if (isHost) {
+                return host.getVictoria();
+            } else {
+                return cliente.getVictoria();
+            }
+        } catch (Exception e) {
+        }
+        return false;
     }
 
     private void pasarTurno() {

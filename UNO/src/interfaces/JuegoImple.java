@@ -36,4 +36,8 @@ public interface JuegoImple extends Remote{
     boolean probarPoder(int indice) throws RemoteException;
     
     void consumirNombre() throws RemoteException;
+    
+    void setVictoria() throws RemoteException;
+    
+    boolean getVictoria() throws RemoteException;
 }
