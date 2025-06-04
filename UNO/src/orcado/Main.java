@@ -18,8 +18,6 @@ public class Main extends JFrame{
         
         new Inicio(this);
         
-        System.out.println(new Random().nextInt(4));
-        
         setVisible(true);
     }
 

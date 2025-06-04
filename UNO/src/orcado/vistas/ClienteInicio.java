@@ -1,17 +1,22 @@
 package orcado.vistas;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import herramientas.HiloClienteParlante;
+
 import herramientas.botones;
+import interfaces.JuegoImple;
 import java.awt.Color;
 import java.awt.Font;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ClienteInicio extends JPanel {
 
@@ -23,18 +28,17 @@ public class ClienteInicio extends JPanel {
 
     private JButton conectar;
 
-    private HiloClienteParlante cliente;
+    private JuegoImple cliente;
 
-    private int widthVista;
-    private int heightVista;
+    private final int widthVista;
+    private final int heightVista;
+    
+    private int PUERTO = 300;
 
-    private JLabel titulo,
-            hostName,
+    private JLabel hostName,
             jugadores,
             lista,
             mensajePartida;
-
-    private String[] usuarios = new String[4];
 
     public ClienteInicio(String nombre, JFrame vista) {
         this.nombre = nombre;
@@ -56,28 +60,32 @@ public class ClienteInicio extends JPanel {
         conectar = botones.iniciarBotones("conectar", 100, 30);
         conectar.setBounds(470, 50, 100, 30);
         conectar.addActionListener((e) -> {
-            conectar();
+            try {
+                conectar();
+            } catch (Exception ex) {}
         });
         add(conectar);
 
         vista.add(this);
     }
 
-    private void conectar() {
-        cliente = new HiloClienteParlante(ip.getText().strip(), this);
-        cliente.start();
+    private void conectar() throws RemoteException, NotBoundException {
+        Registry registro = LocateRegistry.getRegistry(ip.getText(), PUERTO);
+        cliente = (JuegoImple) (registro.lookup("Juego"));
+        cliente.iniciarJugador(nombre);
+        
+        iniciarPrePartida();
+        threadActualizacion();
+        
         conectar.setEnabled(false);
         ip.setEnabled(false);
     }
     
-    public void iniciarPartida(JsonObject json){
-        int jugadores = json.get("jugadores").getAsInt();
-        
-        new Juego(vista, nombre, usuarios, jugadores, cliente);
+    public void iniciarPartida(){
         this.setVisible(false);
     }
 
-    public void actualizacionPrePartida(JsonObject json) {
+    public void iniciarPrePartida() {
 
         Font fuente = new Font("Arial", Font.BOLD, 15);
 
@@ -101,25 +109,41 @@ public class ClienteInicio extends JPanel {
         lista.setFont(fuente);
         add(lista);
 
-        JsonArray array = json.get("jugadores").getAsJsonArray();
-
-        for (int i = 0; i < 4; i++) {
-            usuarios[i] = array.get(i).getAsString();
-        }
-
-        lista.setText("<html>");
-        for (String usuario : usuarios) {
-            if (!"null".equals(usuario)) {
-                lista.setText(lista.getText() + usuario + "<br>");
-            }
-        }
-        lista.setText(lista.getText() + "<html>");
-
-        hostName = new JLabel("Nombre Host:" + usuarios[0]);
+        hostName = new JLabel();
         hostName.setBounds(10, 50, 200, 50);
         hostName.setFont(fuente);
         add(hostName);
         
+        repaint();
+    }
+    
+    private void threadActualizacion(){
+        new Thread(() -> {
+            try {
+                while (!cliente.juegoListo()) {
+                        actualizarNombres(cliente.obtenerJugadores());
+                        Thread.sleep(1000);
+                }
+                new Juego(vista, nombre, cliente);
+                this.setVisible(false);
+            } catch (Exception ex) {
+                Logger.getLogger(HostInicio.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }).start();
+    }
+    
+    public void actualizarNombres(String[] array){
+        lista.setText("<html>");
+        for (String usuario : array) {
+            if (usuario != null) {
+                lista.setText(lista.getText() + usuario + "<br>");
+            }
+        }
+        lista.setText(lista.getText() + "<html>");
+        
+        hostName.setText("Nombre Host: " + array[0]);
+        
+        System.out.println("actualizado");
         repaint();
     }
 }

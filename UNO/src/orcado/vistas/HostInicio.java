@@ -1,23 +1,24 @@
 package orcado.vistas;
 
-import herramientas.Host;
-import herramientas.ServidorMultiParlante;
+import herramientas.JuegoHost;
 import herramientas.botones;
 import java.awt.Color;
 import java.awt.Font;
+import static java.lang.Thread.sleep;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.rmi.RemoteException;
 import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
-
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import java.net.MalformedURLException;
 
 public class HostInicio extends JPanel {
 
@@ -26,7 +27,7 @@ public class HostInicio extends JPanel {
     private int widthVista;
     private int heightVista;
 
-    private Host host;
+    private JuegoHost host;
 
     private JLabel titulo,
             hostName,
@@ -37,12 +38,11 @@ public class HostInicio extends JPanel {
 
     private JFrame vista;
 
-    private String[] usuarios = new String[4];
+    private String[] usuarios;
     private int conexionUsuarios = 1;
 
-    public HostInicio(String nombre, JFrame vista) {
+    public HostInicio(String nombre, JFrame vista) throws RemoteException, MalformedURLException {
         this.nombre = nombre;
-        usuarios[0] = nombre;
 
         this.vista = vista;
 
@@ -54,8 +54,8 @@ public class HostInicio extends JPanel {
         setBackground(Color.WHITE);
         setLayout(null);
 
-        host = new Host(this);
-        host.start();
+        host = new JuegoHost(nombre);
+        
 
         Font fuente = new Font("Arial", Font.BOLD, 15);
 
@@ -90,33 +90,41 @@ public class HostInicio extends JPanel {
         });
         add(iniciar);
 
+        threadActualizacion();
+        
         vista.add(this);
     }
 
-    public void unirse(String nombre, ServidorMultiParlante solicitud) {
-        if (conexionUsuarios < 4) {
-            usuarios[conexionUsuarios] = nombre;
-            lista.setText("<html>");
-            for (String usuario : usuarios) {
-                if (usuario != null) {
-                    lista.setText(lista.getText() + usuario + "<br>");
+    public void iniciar() {
+        host.iniciarJuego();
+    }
+    
+    private void threadActualizacion(){
+        new Thread(() -> {
+            while (!host.juegoListo()) {
+                actualizarNombres(host.obtenerJugadores());
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(HostInicio.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-            lista.setText(lista.getText() + "<html>");
-            host.actualizarUnion(this.nombre, usuarios);
-        }
-        conexionUsuarios++;
+            new Juego(vista, nombre, host);
+            this.setVisible(false);
+        }).start();
     }
-
-    public void iniciar() {
-        new Juego(vista, this, nombre, usuarios, conexionUsuarios, host);
-
-        String mensaje = "{\"accion\":\"iniciar\","
-                + "\"jugadores\":" + conexionUsuarios
-                + "}";
-
-        host.enviarMensaje(mensaje);
-        this.setVisible(false);
+    
+    public void actualizarNombres(String[] array){
+        lista.setText("<html>");
+        for (String usuario : array) {
+            if (usuario != null) {
+                lista.setText(lista.getText() + usuario + "<br>");
+            }
+        }
+        lista.setText(lista.getText() + "<html>");
+        
+        System.out.println("actualizado");
+        repaint();
     }
 
     public String obtenerIPWiFi() {

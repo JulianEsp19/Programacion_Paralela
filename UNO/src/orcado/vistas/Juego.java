@@ -1,21 +1,25 @@
 package orcado.vistas;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import herramientas.HiloClienteParlante;
-import herramientas.Host;
+import herramientas.JuegoHost;
 import herramientas.Jugador;
-import herramientas.PoolFrases;
 import herramientas.botones;
 import herramientas.imagenes;
+import interfaces.JuegoImple;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.rmi.RemoteException;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import mano.Mano;
 
 public class Juego extends JPanel {
 
@@ -26,115 +30,176 @@ public class Juego extends JPanel {
 
     private final JFrame vista;
 
-    private Integer[] cartas = new Integer[60];
-
-    private int indiceBaraja = 1,
-            color = 0,
-            cartaCentro;
-
-    private int jugadores;
-
     private JLabel baraja,
-            centro;
+            centro,
+            nombreLabel,
+            turnoLabel;
 
-    private JLabel[] mano = new JLabel[16];
+    private JLabel[] colores = new JLabel[4];
 
-    private String frase,
-            letrasUsadas = "",
-            nombre;
+    private Icon[] iconosColores = new Icon[4];
 
-    private int turno = 0;
+    private Mano mano;
 
-    private Jugador[] infoJugadores = new Jugador[4];
+    private String nombre;
 
-    private JLabel[] labelJugador = new JLabel[4];
+    private JuegoHost host;
 
-    private Host host;
+    private JuegoImple cliente;
 
-    private HiloClienteParlante cliente;
+    private boolean isCambioColor = false;
 
-    public Juego(JFrame vista, JPanel partida, String nombre, String[] jugadoresName, int cantidad, Host host) {
+    public Juego(JFrame vista, String nombre, JuegoHost host) {
         this.vista = vista;
         this.isHost = true;
-        this.jugadores = cantidad;
         this.nombre = nombre;
         this.host = host;
 
         widthVista = vista.getWidth();
         heightVista = vista.getHeight();
 
-        host.settiarJuego(this);
-
-        iniciarArrayAleatorio();
+        mano = new Mano();
 
         iniciarVista();
-        iniciarJugadores(jugadoresName);
         iniciarMano();
-
-        actualizarClientes();
     }
 
-    public Juego(JFrame vista, String nombre, String[] jugadores, int cantidad, HiloClienteParlante cliente) {
+    public Juego(JFrame vista, String nombre, JuegoImple cliente) {
         this.nombre = nombre;
         this.vista = vista;
         this.isHost = false;
         this.cliente = cliente;
-        this.jugadores = cantidad;
-
-        cliente.setJuego(this);
 
         widthVista = vista.getWidth();
         heightVista = vista.getHeight();
 
-        iniciarVista();
+        mano = new Mano();
 
-        iniciarJugadores(jugadores);
+        iniciarVista();
+        iniciarMano();
     }
 
     private void iniciarMano() {
-        indiceBaraja = (jugadores * 5) + 1;
+        Integer[] manoIndice;
 
-        for (int i = 0; i < jugadores; i++) {
-            if (infoJugadores[i].getNombre() == nombre) {
-                for (int j = 0; j < 5; j++) {
-                    mano[j] = new JLabel(imagenes.obtenerImagenEscalada("src/cartas" + cartas[j + (i * 5) + 1] + ".jpg", 70, 105));
-                    mano[j].setBounds(50 + (j * 80), 300, 70, 105);
-                    add(mano[j]);
-                }
+        try {
+            if (isHost) {
+                manoIndice = host.getMano(nombre);
+            } else {
+                manoIndice = cliente.getMano(nombre);
             }
+
+            for (int i = 0; i < manoIndice.length; i++) {
+                System.out.println("mano: " + manoIndice[i]);
+                JLabel aux = mano.agregar(manoIndice[i]);
+                aux.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+
+                // Agregar el MouseListener
+                aux.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        try {
+                            if (getNombreTurno().equals(nombre) && !isCambioColor) {
+                                clickCarta(e);
+                            }
+                        } catch (RemoteException ex) {
+                            Logger.getLogger(Juego.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                });
+                add(aux);
+            }
+        } catch (Exception e) {
         }
 
         repaint();
-
     }
 
-    private void iniciarArrayAleatorio() {
-        for (int i = 0; i < cartas.length; i++) {
-            cartas[i] = i;
-        }
+    private void actualizar() {
+        new Thread(() -> {
+            while (true) {
+                int auxCentro = getCartaCentro();
 
-        for (int i = cartas.length - 1; i > 0; i--) {
-            // calculamos un índice aleatorio dentro del rango permitido
-            int shuffled_index = (int) Math.floor(Math.random() * (i + 1));
-            //guardamos el elemento que estamos iterando
-            int tmp = cartas[i];
-            // asignamos el elemento aleatorio al índice iterado
-            cartas[i] = cartas[shuffled_index];
-            // asignamos el elemento iterado al índice aleatorio
-            cartas[shuffled_index] = tmp;
-        }
+                if (auxCentro > 51 && !isCambioColor) {
+                    int auxColor = getColor();
+                    ocultarColores(auxColor);
+                    colores[auxColor].setVisible(true);
+                } else if (auxCentro < 51) {
+                    ocultarColores();
+                }
 
-        if (cartas[0] > 39) {
-            iniciarArrayAleatorio();
+                if (getNombreAfectado().equals(nombre)) {
+                    int efecto = getEfecto();
+                    if (efecto == 2) {
+                        for (int i = 0; i < 2; i++) {
+                            obtenerCarta();
+
+                        }
+                    } else if (efecto == 4) {
+                        for (int i = 0; i < 4; i++) {
+                            obtenerCarta();
+                        }
+                    }
+                    consumir();
+                }
+
+                centro.setIcon(imagenes.obtenerImagenEscalada("src/cartas" + auxCentro + ".jpg", 70, 105));
+                turnoLabel.setText("Turno: " + getNombreTurno());
+                repaint();
+            }
+        }).start();
+    }
+
+    private void obtenerCarta() {
+        JLabel aux = mano.agregar(getSiguienteCarta());
+        aux.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+
+        // Agregar el MouseListener
+        aux.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    if (getNombreTurno().equals(nombre) && !isCambioColor) {
+                        clickCarta(e);
+                    }
+                } catch (RemoteException ex) {
+                    Logger.getLogger(Juego.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        add(aux);
+    }
+
+    private void clickCarta(MouseEvent e) throws RemoteException {
+        JLabel aux = (JLabel) e.getComponent();
+        int valorCarta = mano.buscarValorCarta(aux);
+        if (isHost) {
+            System.out.println("valor mano: " + valorCarta);
+            System.out.println("juego: " + host.jugarCarta(valorCarta));
+            if (host.jugarCarta(valorCarta)) {
+                mano.eliminarCarta(aux);
+                if (valorCarta > 51) {
+                    isCambioColor = true;
+                    for (JLabel color : colores) {
+                        color.setVisible(true);
+                    }
+                } else {
+                    host.pasarTurno();
+                }
+            }
+        } else {
+            if (cliente.jugarCarta(valorCarta)) {
+                mano.eliminarCarta(aux);
+                if (valorCarta > 51) {
+                    isCambioColor = true;
+                    for (JLabel color : colores) {
+                        color.setVisible(true);
+                    }
+                } else {
+                    cliente.pasarTurno();
+                }
+            }
         }
-        
-        color = cartas[0] / 10;
-        
-        System.out.println("color: "+color);
-        
-        cartaCentro = cartas[0];
-        
-        System.out.println("carta centro: " + cartaCentro);
     }
 
     private void iniciarVista() {
@@ -144,105 +209,204 @@ public class Juego extends JPanel {
         setBackground(Color.WHITE);
         setLayout(null);
 
-        Font fuente = new Font("Arial", Font.BOLD, 20);
+        Font fuente = new Font("Arial", Font.BOLD, 15);
 
         baraja = new JLabel(imagenes.obtenerImagenEscalada("src/uno.jpg", 70, 105));
         baraja.setBounds(50, 50, 70, 105);
+        baraja.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+
+        // Agregar el MouseListener
+        baraja.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (getNombreTurno().equals(nombre) && !isCambioColor) {
+                    obtenerCarta();
+                    pasarTurno();
+                }
+            }
+        });
         add(baraja);
 
-        centro = new JLabel(imagenes.obtenerImagenEscalada("src/cartas" + cartas[0] + ".jpg", 70, 105));
+        int auxCentro = getCartaCentro();
+
+        centro = new JLabel(imagenes.obtenerImagenEscalada("src/cartas" + auxCentro + ".jpg", 70, 105));
         centro.setBounds(400, 100, 70, 105);
         add(centro);
-        System.out.println(cartas[0]);
-        
+
+        int auxY = 0;
+        int auxX = 0;
+        for (int i = 0; i < 4; i++) {
+            iconosColores[i] = imagenes.obtenerImagenEscalada("src/color" + i + ".png", 100, 100);
+            colores[i] = new JLabel(iconosColores[i]);
+            colores[i].setBounds(320 + (auxX * 130), 50 + (auxY * 120), 100, 100);
+            colores[i].setVisible(false);
+            colores[i].setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+
+            // Agregar el MouseListener
+            colores[i].addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    try {
+                        if (getNombreTurno().equals(nombre) && isCambioColor) {
+                            clickCambioColor(e);
+                        }
+                    } catch (RemoteException ex) {
+                        Logger.getLogger(Juego.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            add(colores[i]);
+            if (i == 1) {
+                auxX++;
+            }
+            if (i == 1) {
+                auxY = 1;
+            } else if (i == 2) {
+                auxY = 0;
+            } else if (i == auxY) {
+                auxY++;
+            }
+        }
+
+        nombreLabel = new JLabel("Nombre: " + nombre);
+        nombreLabel.setBounds(50, 0, 200, 50);
+        nombreLabel.setFont(fuente);
+        nombreLabel.setForeground(Color.blue);
+        add(nombreLabel);
+
+        turnoLabel = new JLabel("Turno: " + getNombreTurno());
+        turnoLabel.setBounds(800, 150, 100, 50);
+        turnoLabel.setFont(fuente);
+        turnoLabel.setForeground(Color.blue);
+        add(turnoLabel);
 
         vista.add(this);
+        actualizar();
     }
 
-    private void actualizarHost() {
-        String puntajes = "[";
-        for (int i = 0; i < jugadores; i++) {
-            puntajes += infoJugadores[i].getPuntos() + ",";
-        }
-        puntajes += "]";
-
-        String mensaje = "{\"accion\":\"actualizarPartida\","
-                + "\"turno\":" + turno + ","
-                + "\"letrasUsadas\": \"" + letrasUsadas + "\","
-                + "\"frase\": \"" + frase + "\","
-                + "\"fotograma\":" + fotograma + ","
-                + "\"puntajes\":" + puntajes
-                + "}";
-        cliente.enviarMensaje(mensaje);
-    }
-
-    public void actualizacion(JsonObject json) {
-        turno = json.get("turno").getAsInt();
-        letrasUsadas = json.get("letrasUsadas").getAsString();
-        color = json.get("color").getAsInt();
-        indiceBaraja = json.get("indiceBaraja").getAsInt();
-        cartaCentro = json.get("cartaCentro").getAsInt();
-        
-
-        actualizarTurno();
-        centro.setIcon(imagenes.obtenerImagenEscalada("src/cartas" + cartaCentro + ".jpg", 150, 300));
-        actualizarBaraja(json);
-        if (isHost) {
-            actualizarClientes();
+    private void clickCambioColor(MouseEvent e) throws RemoteException {
+        Icon icono = ((JLabel) e.getComponent()).getIcon();
+        for (int i = 0; i < 4; i++) {
+            if (icono == iconosColores[i]) {
+                if (isHost) {
+                    host.cambiarColor(i);
+                    ocultarColores();
+                    host.pasarTurno();
+                } else {
+                    cliente.cambiarColor(i);
+                    ocultarColores();
+                    cliente.pasarTurno();
+                }
+                isCambioColor = false;
+            }
         }
     }
 
-    public void actualizarBaraja(JsonObject json) {
-        JsonArray array = json.get("baraja").getAsJsonArray();
-
-        for (int i = 0; i < cartas.length; i++) {
-            cartas[i] = array.get(i).getAsInt();
+    private void ocultarColores() {
+        for (JLabel color : colores) {
+            color.setVisible(false);
+        }
+    }
+    
+    private void ocultarColores(int color){
+        for (int i = 0; i < 4; i++) {
+            if(color != i){
+                colores[i].setVisible(false);
+            }
         }
     }
 
-    private void actualizarClientes() {
-        String puntajes = "[";
-        for (int i = 0; i < cartas.length; i++) {
-            puntajes += cartas[i] + ",";
+    private int getCartaCentro() {
+        try {
+            if (isHost) {
+                return host.getCartaCentro();
+            } else {
+                return cliente.getCartaCentro();
+            }
+        } catch (Exception e) {
         }
-        puntajes += "]";
-
-        String mensaje = "{\"accion\":\"actualizarPartida\","
-                + "\"turno\":" + turno + ","
-                + "\"color\":" + color + ","
-                + "\"indiceBaraja\":" + indiceBaraja + ","
-                + "\"cartaCentro\":" + cartaCentro + ","
-                + "\"baraja\":" + puntajes
-                + "}";
-
-        host.enviarMensaje(mensaje);
+        return -1;
     }
 
-    private void actualizarTurno() {
-        if (turno == 0) {
-            labelJugador[jugadores - 1].setForeground(Color.black);
-            labelJugador[turno].setForeground(Color.blue);
-        } else {
-            labelJugador[turno - 1].setForeground(Color.black);
-            labelJugador[turno].setForeground(Color.blue);
+    private void consumir() {
+        try {
+            if (isHost) {
+                host.efectoConsumido();
+            } else {
+                cliente.efectoConsumido();
+            }
+        } catch (Exception e) {
         }
     }
 
-    private void iniciarJugadores(String[] jugadoresName) {
-
-        for (int i = 0; i < jugadores; i++) {
-
-            System.out.println(jugadoresName[i]);
-            labelJugador[i] = new JLabel();
-            labelJugador[i].setBounds(50 + (i * 250), 400, 100, 70);
-            add(labelJugador[i]);
-
-            infoJugadores[i] = new Jugador(jugadoresName[i], labelJugador[i]);
-            infoJugadores[i].actualizar();
+    private void pasarTurno() {
+        try {
+            if (isHost) {
+                host.pasarTurno();
+            } else {
+                cliente.pasarTurno();
+            }
+        } catch (Exception e) {
         }
+    }
 
-        labelJugador[0].setForeground(Color.blue);
+    private String getNombreTurno() {
+        try {
+            if (isHost) {
+                return host.getNombreTurno();
+            } else {
+                return cliente.getNombreTurno();
+            }
+        } catch (Exception e) {
+        }
+        return "";
+    }
 
-        repaint();
+    private String getNombreAfectado() {
+        try {
+            if (isHost) {
+                return host.getAfectado();
+            } else {
+                return cliente.getAfectado();
+            }
+        } catch (Exception e) {
+        }
+        return "";
+    }
+
+    private int getColor() {
+        try {
+            if (isHost) {
+                return host.getColor();
+            } else {
+                return cliente.getColor();
+            }
+        } catch (Exception e) {
+        }
+        return -1;
+    }
+
+    private int getEfecto() {
+        try {
+            if (isHost) {
+                return host.getEfecto();
+            } else {
+                return cliente.getEfecto();
+            }
+        } catch (Exception e) {
+        }
+        return -1;
+    }
+
+    private int getSiguienteCarta() {
+        try {
+            if (isHost) {
+                return host.getCartaMazo();
+            } else {
+                return cliente.getCartaMazo();
+            }
+        } catch (Exception e) {
+        }
+        return -1;
     }
 }
