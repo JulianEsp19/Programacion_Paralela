@@ -117,6 +117,11 @@ public class Juego extends JPanel {
 
     private void actualizar() {
         new Thread(() -> {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Juego.class.getName()).log(Level.SEVERE, null, ex);
+            }
             while (true) {
                 int auxCentro = getCartaCentro();
 
@@ -130,10 +135,10 @@ public class Juego extends JPanel {
 
                 if (getNombreAfectado().equals(nombre)) {
                     int efecto = getEfecto();
+                    System.out.println("afectado");
                     if (efecto == 2) {
                         for (int i = 0; i < 2; i++) {
                             obtenerCarta();
-
                         }
                     } else if (efecto == 4) {
                         for (int i = 0; i < 4; i++) {

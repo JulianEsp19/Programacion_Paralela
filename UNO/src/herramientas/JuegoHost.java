@@ -22,7 +22,7 @@ public class JuegoHost extends UnicastRemoteObject implements JuegoImple {
 
     private final Integer[] saltarTurno = {43, 46, 49, 40};
     private final Integer[] girarTurnos = {44, 47, 50, 41};
-    private final Integer[] masDos = {45, 48, 51, 41};
+    private final Integer[] masDos = {45, 48, 51, 42};
 
     /*
     0 = Pasar turno
