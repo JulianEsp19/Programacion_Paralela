@@ -188,6 +188,11 @@ public class JuegoHost extends UnicastRemoteObject implements JuegoImple {
     }
     
     @Override
+    public void consumirNombre(){
+        afectado = -1;
+    }
+    
+    @Override
     public int getCartaMazo(){
         if(indiceBaraja < 60){
             indiceBaraja++;

@@ -336,9 +336,9 @@ public class Juego extends JPanel {
     private void consumir() {
         try {
             if (isHost) {
-                host.efectoConsumido();
+                host.consumirNombre();
             } else {
-                cliente.efectoConsumido();
+                cliente.consumirNombre();
             }
         } catch (Exception e) {
         }

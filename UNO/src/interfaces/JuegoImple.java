@@ -34,4 +34,6 @@ public interface JuegoImple extends Remote{
     int getCartaMazo() throws RemoteException;
     
     boolean probarPoder(int indice) throws RemoteException;
+    
+    void consumirNombre() throws RemoteException;
 }
