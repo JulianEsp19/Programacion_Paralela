@@ -347,8 +347,6 @@ public class Juego extends JPanel {
 
         vista.add(this);
         actualizar();
-        
-        uno();
     }
 
     private void clickCambioColor(MouseEvent e) throws RemoteException {
