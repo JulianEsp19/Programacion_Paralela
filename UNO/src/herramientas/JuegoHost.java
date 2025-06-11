@@ -39,6 +39,8 @@ public class JuegoHost extends UnicastRemoteObject implements JuegoImple {
             victoria;
 
     private String[] jugadores = new String[4];
+    
+    private boolean[] unos = new boolean[4];
 
     private Registry registro;
 
@@ -52,6 +54,7 @@ public class JuegoHost extends UnicastRemoteObject implements JuegoImple {
         try {
             registro.bind("Juego", (JuegoImple) this);
         } catch (Exception e) {
+            System.out.println(e);
         }
     }
 
@@ -331,6 +334,23 @@ public class JuegoHost extends UnicastRemoteObject implements JuegoImple {
     @Override
     public boolean juegoListo() {
         return ready;
+    }
+    
+    @Override
+    public void uno(String nombre, boolean isUno){
+        unos[getIndiceNombre(nombre)] = isUno;
+    }
+    
+    @Override
+    public String getUno(){
+        String resultado = "<html> <center>jugadores con uno <br>";
+        for (int i = 0; i < 4; i++) {
+            if(unos[i] == true){
+                resultado += jugadores[i] + "<br>";
+            }
+        }
+        resultado += "</center> </html>";
+        return resultado;
     }
 
 }

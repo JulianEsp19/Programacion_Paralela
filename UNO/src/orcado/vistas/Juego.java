@@ -21,6 +21,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 import mano.Mano;
+import orcado.Main;
 
 public class Juego extends JPanel {
 
@@ -34,7 +35,10 @@ public class Juego extends JPanel {
     private JLabel baraja,
             centro,
             nombreLabel,
-            turnoLabel;
+            turnoLabel,
+            unoLabel;
+    
+    private JButton salir;
 
     private JLabel[] colores = new JLabel[4];
 
@@ -49,8 +53,10 @@ public class Juego extends JPanel {
     private JuegoImple cliente;
 
     private boolean isCambioColor = false;
-    
+
     private boolean unoClick = false;
+
+    private boolean uno = false;
 
     public Juego(JFrame vista, String nombre, JuegoHost host) {
         this.vista = vista;
@@ -120,12 +126,13 @@ public class Juego extends JPanel {
 
     private void actualizar() {
         new Thread(() -> {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Juego.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            String jugadoresUno = "";
             while (true) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Juego.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 int auxCentro = getCartaCentro();
 
                 if (auxCentro > 51 && !isCambioColor) {
@@ -167,6 +174,16 @@ public class Juego extends JPanel {
                 } else {
                     turnoLabel.setText("Victoria: " + getNombreTurno());
                 }
+                
+                if(jugadoresUno != getNombresUno()){
+                    jugadoresUno = getNombresUno();
+                    unoLabel.setText(jugadoresUno);
+                }
+                
+                if(turnoLabel.getText().contains("Victoria")){
+                    salir.setVisible(true);
+                }
+                
                 repaint();
             }
         }).start();
@@ -226,9 +243,16 @@ public class Juego extends JPanel {
                 }
             }
         }
-        
-        if(mano.getLength() == 1){
+
+        if (mano.getLength() == 1 && !uno) {
             uno();
+            uno = true;
+            setUno(uno);
+        }
+
+        if (mano.getLength() > 1) {
+            uno = false;
+            setUno(uno);
         }
     }
 
@@ -244,12 +268,14 @@ public class Juego extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 unoClick = true;
                 System.out.println(unoClick);
+                uno.setVisible(false);
+                vista.setVisible(true);
             }
         });
         Random random = new Random();
         uno.setBounds(random.nextInt(1700), random.nextInt(800), 100, 100);
         uno.setVisible(true);
-        
+
         new Thread(() -> {
             try {
                 Thread.sleep(3000);
@@ -258,12 +284,12 @@ public class Juego extends JPanel {
             }
             uno.setVisible(false);
             vista.setVisible(true);
-            if(!unoClick){
+            if (!unoClick) {
                 for (int i = 0; i < 2; i++) {
                     obtenerCarta();
                 }
             }
-                unoClick = false;
+            unoClick = false;
         }).start();
     }
 
@@ -340,10 +366,26 @@ public class Juego extends JPanel {
         add(nombreLabel);
 
         turnoLabel = new JLabel("Turno: " + getNombreTurno());
-        turnoLabel.setBounds(800, 150, 100, 50);
+        turnoLabel.setBounds(800, 150, 200, 50);
         turnoLabel.setFont(fuente);
         turnoLabel.setForeground(Color.blue);
         add(turnoLabel);
+
+        unoLabel = new JLabel();
+        unoLabel.setBounds(800, 30, 200, 200);
+        unoLabel.setFont(fuente);
+        unoLabel.setForeground(Color.blue);
+        add(unoLabel);
+        
+        salir = new JButton("Salir");
+        salir.setBounds(500, 30, 100, 50);
+        salir.setVisible(false);
+        salir.addActionListener((e) -> {
+            new Main();
+            vista.dispose();
+        });
+        add(salir);
+        
 
         vista.add(this);
         actualizar();
@@ -463,6 +505,18 @@ public class Juego extends JPanel {
         }
         return "";
     }
+    
+    private String getNombresUno() {
+        try {
+            if (isHost) {
+                return host.getUno();
+            } else {
+                return cliente.getUno();
+            }
+        } catch (Exception e) {
+        }
+        return "";
+    }
 
     private int getColor() {
         try {
@@ -486,6 +540,17 @@ public class Juego extends JPanel {
         } catch (Exception e) {
         }
         return -1;
+    }
+
+    private void setUno(boolean isUno) {
+        try {
+            if (isHost) {
+                host.uno(nombre, isUno);
+            } else {
+                cliente.uno(nombre, isUno);
+            }
+        } catch (Exception e) {
+        }
     }
 
     private int getSiguienteCarta() {

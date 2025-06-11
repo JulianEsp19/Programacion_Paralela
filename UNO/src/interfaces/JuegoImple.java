@@ -40,4 +40,8 @@ public interface JuegoImple extends Remote{
     void setVictoria() throws RemoteException;
     
     boolean getVictoria() throws RemoteException;
+    
+    void uno(String nombre, boolean isUno) throws RemoteException;
+    
+    String getUno() throws RemoteException;
 }
