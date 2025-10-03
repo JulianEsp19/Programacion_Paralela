@@ -23,38 +23,39 @@ public class EspectroSecuencial {
 
     public static void convertM4AToRaw(File carpeta) throws IOException, InterruptedException {
 
-        for (String archivo : carpeta.list()) {
-            String outputFilePath = System.getProperty("user.dir") + "\\src\\src\\" + archivo.replace(".m4a", ".wav");
-            String inputFile = carpeta.getPath() + File.separator + archivo;
-            String espectroPath = System.getProperty("user.dir") + "\\src\\espectros\\" + archivo.replace(".m4a", ".txt");
+        String archivo = carpeta.getName();
 
-            System.out.println(inputFile);
-            System.out.println(outputFilePath);
+        String outputFilePath = System.getProperty("user.dir") + "\\src\\src\\" + archivo.replace(".m4a", ".wav");
+        String inputFile = carpeta.getPath();
+        String espectroPath = System.getProperty("user.dir") + "\\src\\espectros\\" + archivo.replace(".m4a", ".txt");
 
-            ProcessBuilder pb = new ProcessBuilder(
-                    "ffmpeg", "-i", inputFile, "-ac", "1", "-ar", "44100", outputFilePath
-            );
+        System.out.println(inputFile);
+        System.out.println(outputFilePath);
 
-            pb.redirectErrorStream(true); // Capturar stderr también.
-            Process process = pb.start();
+        ProcessBuilder pb = new ProcessBuilder(
+                "ffmpeg", "-i", inputFile, "-ac", "1", "-ar", "44100", outputFilePath
+        );
 
-            // Leer salida del proceso (debug)
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    System.out.println(line);
-                }
+        pb.redirectErrorStream(true); // Capturar stderr también.
+        Process process = pb.start();
+
+        // Leer salida del proceso (debug)
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
             }
-            
-            Thread.sleep(500);
-
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                throw new RuntimeException("ffmpeg failed with exit code " + exitCode);
-            }
-
-            generarEspectroYGuardar(outputFilePath, espectroPath);
         }
+
+        Thread.sleep(500);
+
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            throw new RuntimeException("ffmpeg failed with exit code " + exitCode);
+        }
+
+        generarEspectroYGuardar(outputFilePath, espectroPath);
+
     }
 
     private static void generarEspectroYGuardar(String wavFilePath, String outputFilePath) {
